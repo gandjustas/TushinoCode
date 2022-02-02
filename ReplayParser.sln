@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0247184C-4F59-45AE-93C9-561CDDAA3C09}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplayParser", "src\ReplayParser\ReplayParser.csproj", "{41677795-D937-461F-AE69-1A9D8F7C7971}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParseTsgReplays", "src\ParseReplays\ParseTsgReplays.csproj", "{645125F4-DFA0-4E8E-80A3-2D180DF2FDEF}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{86304CA1-94D5-46FB-81B9-95003361013D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +33,10 @@ Global
 		{645125F4-DFA0-4E8E-80A3-2D180DF2FDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{645125F4-DFA0-4E8E-80A3-2D180DF2FDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{645125F4-DFA0-4E8E-80A3-2D180DF2FDEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86304CA1-94D5-46FB-81B9-95003361013D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86304CA1-94D5-46FB-81B9-95003361013D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86304CA1-94D5-46FB-81B9-95003361013D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86304CA1-94D5-46FB-81B9-95003361013D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,5 +45,8 @@ Global
 		{4C21A67C-D01B-4137-B779-2D136B96735A} = {0247184C-4F59-45AE-93C9-561CDDAA3C09}
 		{41677795-D937-461F-AE69-1A9D8F7C7971} = {0247184C-4F59-45AE-93C9-561CDDAA3C09}
 		{645125F4-DFA0-4E8E-80A3-2D180DF2FDEF} = {0247184C-4F59-45AE-93C9-561CDDAA3C09}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3BD95AFC-AE55-455A-8561-63D661E4AB51}
 	EndGlobalSection
 EndGlobal

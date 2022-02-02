@@ -16,17 +16,11 @@ namespace Tushino
         public DbSet<Medical> Medicals { get; set; }
         public DbSet<Goal> Goals { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+
+        public ReplaysContext(DbContextOptions<ReplaysContext> options): base(options)
         {
-            optionsBuilder.UseSqlite("Filename=replays.db");
+            //AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Unit>()
-                .HasKey("ReplayId", "Id");
-
-            base.OnModelCreating(modelBuilder);
-        }
     }
 }

@@ -41,7 +41,7 @@ namespace Tushino
             reader.Down();
             var island = reader.ReadString();
             var mission = reader.ReadString();
-            var dateTime = DateTime.ParseExact(reader.ReadString(), "yyyy-MM-dd-HH-mm-ss", provider);
+            var dateTime = DateTime.ParseExact(reader.ReadString(), "yyyy-MM-dd-HH-mm-ss", provider, DateTimeStyles.AssumeUniversal).ToUniversalTime();
             reader.SkipElement();
             var ver = reader.ReadInt();
             if (ver != 5) return null;

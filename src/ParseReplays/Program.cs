@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using PboTools;
 using SharpCompress.Archives.SevenZip;
 using System.Threading.Channels;
+using Microsoft.Extensions.Configuration;
 
 namespace Tushino
 {
@@ -23,40 +24,29 @@ namespace Tushino
         static HashSet<ReplayKey> ExistingRecords = new HashSet<ReplayKey>();
         public async static Task Main(string[] args)
         {
+            IConfiguration config = new ConfigurationBuilder()
+                                        .AddJsonFile("appsettings.json")
+                                        .AddEnvironmentVariables()
+                                        .AddCommandLine(args)
+                                        .Build();
+
+            var optionsBuilder = new DbContextOptionsBuilder<ReplaysContext>();
+            optionsBuilder.UseNpgsql(config.GetConnectionString("postgres"));
+            var contextOptions = optionsBuilder.Options;
+
             if (args.Length == 0)
             {
-                Console.WriteLine("Usage: ParseTsgReplays.exe path-to-replays [-rebuild [-unfinished]]");
+                Console.WriteLine("Usage: ParseTsgReplays.exe path-to-replays");
                 return;
             }
 
-            var rebuildBase = false;
-            if (args.Contains("-rebuild", StringComparer.OrdinalIgnoreCase))
-            {
-                rebuildBase = true;
-            }
 
-            var unfinished = false;
-            if (args.Contains("-unfinished", StringComparer.OrdinalIgnoreCase))
-            {
-                unfinished = true;
-            }
-
-            using (var db = new ReplaysContext())
+            using (var db = new ReplaysContext(contextOptions))
             {
                 db.Database.Migrate();
-                if (!rebuildBase)
-                {
-                    var allReplays = db.Replays.AsQueryable();
-                    if (unfinished)
-                    {
-                        allReplays = allReplays.Where(r => r.IsFinished == true);
-                    }
-                    ExistingRecords = allReplays.Select(r => new ReplayKey(r.Server, r.Timestamp)).ToHashSet();
-                }
+                var allReplays = db.Replays.AsQueryable();
+                ExistingRecords = allReplays.Select(r => new ReplayKey(r.Server, r.Timestamp)).ToHashSet();
             };
-
-
-
 
             var dir = args[0];
 
@@ -67,11 +57,21 @@ namespace Tushino
                     ".7z" => ParseSingleArchive(dir),
                     _ => throw new InvalidOperationException("Unknown file extension")
                 };
-                using (var db = new ReplaysContext())
+                using var db = new ReplaysContext(contextOptions);
+                if (ExistingRecords.TryGetValue(new ReplayKey(replay.Server, replay.Timestamp), out var key))
                 {
-                    db.Replays.AddRange(replay);
-                    await db.SaveChangesAsync();
+                    if (config.GetValue<bool>("Overwrite", false))
+                    {
+                        var toRemove = await db.Replays.Where(r => r.Server == key.server && r.Timestamp == key.timestamp).ToListAsync();
+                        db.Replays.RemoveRange(toRemove);
+                    }
+                    else 
+                    {
+                        throw new InvalidOperationException($"Replay from {key.server} {key.timestamp} already exists");
+                    }
                 }
+                db.Replays.AddRange(replay);
+                await db.SaveChangesAsync();
 
             }
             else
@@ -89,7 +89,7 @@ namespace Tushino
                             toAdd.Add(r);
                             if (++counter % 1000 == 0)
                             {
-                                using (var db = new ReplaysContext())
+                                using (var db = new ReplaysContext(contextOptions))
                                 {
                                     db.Replays.AddRange(toAdd);
                                     await db.SaveChangesAsync();
@@ -99,7 +99,7 @@ namespace Tushino
                             }
                         }
                     }
-                    using (var db = new ReplaysContext())
+                    using (var db = new ReplaysContext(contextOptions))
                     {
                         db.Replays.AddRange(toAdd);
                         await db.SaveChangesAsync();
@@ -237,47 +237,5 @@ namespace Tushino
                 }
             }
         }
-
-        private static void ClearDuplicates()
-        {
-            //Clear duplicates
-            using (var db = new ReplaysContext())
-            {
-                db.Database.ExecuteSqlRaw(@"
-                    delete   from EnterExitEvents
-                    where    ReplayId not in
-                             (
-                             select  max(Id)
-                             from    Replays
-                             group by Server, Timestamp
-                             );
-
-                    delete   from Units
-                    where    ReplayId not in
-                             (
-                             select  max(Id)
-                             from    Replays
-                             group by Server, Timestamp
-                             );
-
-                    delete   from Kills
-                    where    ReplayId not in
-                             (
-                             select  max(Id)
-                             from    Replays
-                             group by Server, Timestamp
-                             )	;	 
-		 
-                    delete   from Replays
-                    where    Id not in
-                             (
-                             select  max(Id)
-                             from    Replays
-                             group by Server, Timestamp
-                             )	;	 
-                ");
-            }
-        }
-
     }
 }
