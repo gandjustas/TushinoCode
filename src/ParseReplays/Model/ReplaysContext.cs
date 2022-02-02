@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace Tushino
 {
-    public class ReplaysContext:DbContext
+    public class ReplaysContext : DbContext
     {
         public DbSet<Replay> Replays { get; set; }
         public DbSet<Unit> Units { get; set; }
-        public DbSet<EnterExitEvent> EnterExitEvents { get; set; }
+        public DbSet<EnterExit> EnterExit { get; set; }
         public DbSet<Kill> Kills { get; set; }
+        public DbSet<Hit> Hits { get; set; }
+        public DbSet<Medical> Medicals { get; set; }
+        public DbSet<Goal> Goals { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

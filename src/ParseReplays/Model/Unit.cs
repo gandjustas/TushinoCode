@@ -8,9 +8,8 @@ namespace Tushino
 {
     public class Unit
     {
-        public int ReplayId { get; set; }
-
         public int Id { get; set; }
+        public int ReplayId { get; set; }
 
         [MaxLength(50)]
         public string Name { get; set; }

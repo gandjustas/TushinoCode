@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParseTsgReplays", "ParseTsgReplays.xproj", "{95CD0764-595C-4A26-B612-00DAAE7DEC94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParseTsgReplays", "ParseTsgReplays.csproj", "{95CD0764-595C-4A26-B612-00DAAE7DEC94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D40B55E3-BCB8-4D84-BA7F-EF93533354ED}
 	EndGlobalSection
 EndGlobal

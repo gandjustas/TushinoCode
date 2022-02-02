@@ -74,29 +74,28 @@ namespace Tushino
         {
             while (reader.HasMoreElements)
             {
-                var killsInFrame = new List<Kill>();
                 reader.Down();
                 currentTime = reader.ReadInt();
                 result.PlayTime = currentTime;
-                ParseEvents(killsInFrame);
-                ParseUnitsInFrame(killsInFrame, currentTime - prevTime);
+                ParseEvents();
+                ParseUnitsInFrame(currentTime - prevTime);
                 reader.Up();
                 prevTime = currentTime;
             }
         }
 
-        private void ParseEvents(List<Kill> killsInFrame)
+        private void ParseEvents()
         {
             if (!reader.HasMoreElements) return;
             reader.Down();
             while (reader.HasMoreElements)
             {
-                ParseEvent(killsInFrame);
+                ParseEvent();
             }
             reader.Up();
         }
 
-        private void ParseEvent(List<Kill> killsInFrame)
+        private void ParseEvent()
         {
             if (!reader.HasMoreElements) return;
             reader.Down();
@@ -115,7 +114,7 @@ namespace Tushino
                     AddVehicle();
                     break;
                 case 3: //Change name (in-out)
-                    var e = new EnterExitEvent
+                    var e = new EnterExit
                     {
                         Time = currentTime,
                         UnitId = reader.ReadInt()
@@ -140,12 +139,61 @@ namespace Tushino
                         Time = reader.ReadInt(),
                         KillerId = reader.ReadInt(),
                         TargetId = reader.ReadInt(),
-                        Weapon = reader.ReadString(),
-                        Ammo = reader.ReadString(),
-                        Distance = reader.ReadDouble()
                     };
                     result.Kills.Add(kill);
-                    killsInFrame.Add(kill);
+                    break;
+                case 5: //Hit
+                    var hit = new Hit()
+                    {
+                        Time = reader.ReadInt(),
+                        ShooterId = reader.ReadInt(),
+                        TargetId = reader.ReadInt(),
+                        Weapon = reader.ReadString(),
+                        Magazine = reader.ReadString(),
+                        Distance = reader.ReadDouble(),
+                        Damage = reader.ReadDouble(),
+                        IsUnconscious = reader.ReadBool(),
+                        Ammo = reader.ReadString()
+                    };
+
+                    if (reader.HasMoreElements)
+                    {
+                        var vehicleId = reader.ReadInt();
+                        if (vehicleId != hit.ShooterId && vehicleId != 0)
+                        {
+                            hit.ShooterVehicleId = vehicleId;
+                        }
+                    }
+                    result.Hits.Add(hit);
+                    break;
+                case 6: //Markers + medical (old)
+                case 7: //Medical
+                    if(reader.IsNumber())
+                    {
+                        var medical = new Medical()
+                        {
+                            Time = reader.ReadInt(),
+                            MedicId = reader.ReadInt(),
+                            PatientId = reader.ReadInt(),
+                            Action = reader.ReadString(),
+                            Value = reader.ReadDouble(),
+                            IsUnconscious = reader.ReadBool(),
+                            IsPlayer = reader.ReadBool()
+                        };
+                        result.Medicals.Add(medical);
+                    };
+                    break;
+                case 8: //Goal
+                    var goal = new Goal()
+                    {
+                        Time = reader.ReadInt(),
+                        UnitId = reader.ReadInt(),
+                        Score= reader.ReadDouble(),
+                        Message = reader.ReadString(),
+                        IsUnconscious = reader.ReadBool(),
+                        IsPlayer = reader.ReadBool()
+                    };
+                    result.Goals.Add(goal);
                     break;
             }
 
@@ -231,7 +279,7 @@ namespace Tushino
                         var from = reader.ReadString();
                         var to = reader.ReadString();
 
-                        var e = new EnterExitEvent
+                        var e = new EnterExit
                         {
                             Time = currentTime,
                             UnitId = id
@@ -302,7 +350,7 @@ namespace Tushino
             result.Units.Add(u);
         }
 
-        private void ParseUnitsInFrame(List<Kill> killsInFrame, int timeDiff)
+        private void ParseUnitsInFrame(int timeDiff)
         {
             while (reader.HasMoreElements)
             {
@@ -315,8 +363,7 @@ namespace Tushino
                 var damage = reader.HasMoreElements ? reader.ReadDouble() : 0;
                 var vehicleId = reader.HasMoreElements ? (int?)reader.ReadInt() : null;
 
-                Unit unit = null;
-                if (units.TryGetValue(unitId, out unit))
+                if (units.TryGetValue(unitId, out var unit))
                 {
                     unit.Damage = damage;
                     if (!unit.TimeOfDeath.HasValue && damage >= 1)
@@ -337,7 +384,7 @@ namespace Tushino
                     }
                 }
 
-                foreach (var kill in killsInFrame.Where(k => k.KillerId == unitId)) kill.KillerVehicleId = vehicleId;
+                
                 reader.Up();
 
             }

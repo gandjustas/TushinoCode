@@ -27,14 +27,20 @@ namespace Tushino
         public int PlayTime { get; set; }
         public DateTime Timestamp { get; set; }
         public ICollection<Unit> Units { get; private set; }
-        public ICollection<EnterExitEvent> Events { get; private set; }
+        public ICollection<EnterExit> Events { get; private set; }
         public ICollection<Kill> Kills { get; private set; }
+        public ICollection<Hit> Hits { get; private set; }
+        public ICollection<Medical> Medicals { get; private set; }
+        public ICollection<Goal> Goals { get; private set; }
 
         public Replay()
         {
             Units = new HashSet<Unit>();
-            Events = new HashSet<EnterExitEvent>();
+            Events = new HashSet<EnterExit>();
             Kills = new HashSet<Kill>();
+            Hits = new HashSet<Hit>();
+            Medicals = new HashSet<Medical>();
+            Goals = new HashSet<Goal>();
         }
     }
 }

@@ -146,6 +146,7 @@ namespace Tushino
             Ws();
             if (IsString()) ReadString();
             else if (IsNumber()) ReadDouble();
+            else if (IsLiteral()) ReadLiteral();
             else if (IsArray())
             {
                 Down();
@@ -162,6 +163,11 @@ namespace Tushino
         public bool IsNumber()
         {
             return char.IsDigit(Next) || Next == '-' || Next == '+';
+        }
+
+        public bool IsLiteral()
+        {
+            return char.IsLetter(Next);
         }
 
         public bool IsString()
@@ -216,6 +222,14 @@ namespace Tushino
             return int.Parse(buffer.ToString());
         }
 
+        public string ReadLiteral()
+        {
+            Ws();
+            buffer.Clear();
+            Element();
+            Advance();
+            return buffer.ToString();
+        }
 
         public double ReadDouble()
         {
@@ -227,6 +241,17 @@ namespace Tushino
             double.TryParse(buffer.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
             return result;
         }
+
+        public bool ReadBool()
+        {
+            return ReadLiteral() switch
+            {
+                "true" =>  true,
+                "false" => false,
+                var x => throw new ParseException($"Expected 'true' or 'false', got {x}", this)
+            };
+        }
+
 
         private void Element()
         {

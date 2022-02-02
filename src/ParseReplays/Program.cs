@@ -21,7 +21,7 @@ namespace Tushino
         static Channel<Tuple<string, Exception>> exceptions = Channel.CreateUnbounded<Tuple<string, Exception>>(new UnboundedChannelOptions { SingleReader = true });
         static Channel<Replay> queue = Channel.CreateUnbounded<Replay>(new UnboundedChannelOptions { SingleReader = true });
         static HashSet<ReplayKey> ExistingRecords = new HashSet<ReplayKey>();
-        public static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
             if (args.Length == 0)
             {
@@ -56,40 +56,58 @@ namespace Tushino
             };
 
 
-            var task = Task.Run(async () =>
-            {
-                var set = new HashSet<ReplayKey>();
 
-                var counter = 0;
-                List<Replay> toAdd = new List<Replay>();
-                await foreach (var r in queue.Reader.ReadAllAsync())
+
+            var dir = args[0];
+
+            if (Path.HasExtension(dir))
+            {
+                var replay = Path.GetExtension(dir) switch {
+                    ".pbo" => ParseSiglePbo(dir),
+                    ".7z" => ParseSingleArchive(dir),
+                    _ => throw new InvalidOperationException("Unknown file extension")
+                };
+                using (var db = new ReplaysContext())
                 {
-                    if (ExistingRecords.Add(new(r.Server, r.Timestamp)))
+                    db.Replays.AddRange(replay);
+                    await db.SaveChangesAsync();
+                }
+
+            }
+            else
+            {
+                var task = Task.Run(async () =>
+                {
+                    var set = new HashSet<ReplayKey>();
+
+                    var counter = 0;
+                    List<Replay> toAdd = new List<Replay>();
+                    await foreach (var r in queue.Reader.ReadAllAsync())
                     {
-                        toAdd.Add(r);
-                        if (++counter % 1000 == 0)
+                        if (ExistingRecords.Add(new(r.Server, r.Timestamp)))
                         {
-                            using (var db = new ReplaysContext())
+                            toAdd.Add(r);
+                            if (++counter % 1000 == 0)
                             {
-                                db.Replays.AddRange(toAdd);
-                                await db.SaveChangesAsync();
-                                counter = 0;
-                                toAdd.Clear();
+                                using (var db = new ReplaysContext())
+                                {
+                                    db.Replays.AddRange(toAdd);
+                                    await db.SaveChangesAsync();
+                                    counter = 0;
+                                    toAdd.Clear();
+                                }
                             }
                         }
                     }
-                }
-                using (var db = new ReplaysContext())
-                {
-                    db.Replays.AddRange(toAdd);
-                    await db.SaveChangesAsync();
-                }
-            });
+                    using (var db = new ReplaysContext())
+                    {
+                        db.Replays.AddRange(toAdd);
+                        await db.SaveChangesAsync();
+                    }
+                });
 
 
-            var provider = CultureInfo.InvariantCulture;
-
-            Task.Run(async () =>
+                var task2 = Task.Run(async () =>
                 {
                     await foreach (var t in exceptions.Reader.ReadAllAsync())
                     {
@@ -98,28 +116,52 @@ namespace Tushino
                         Console.WriteLine();
                     }
                 });
-
-            var dir = args[0];
-
-            if (Path.HasExtension(dir))
-            {
-                if (Path.GetExtension(dir) == ".pbo") ParsePbo(dir);
-                if (Path.GetExtension(dir) == ".7z") ParseArchive(dir);
-            }
-            else
-            {
                 Parallel.ForEach(Directory.EnumerateFiles(dir, "*.pbo", SearchOption.AllDirectories), ParsePbo);
                 Parallel.ForEach(Directory.EnumerateFiles(dir, "*.7z", SearchOption.AllDirectories), ParseArchive);
+
+                Console.WriteLine("Processed {0} parsed {1}", counterProcessed, counterParsed);
+
+                queue.Writer.TryComplete();
+                exceptions.Writer.TryComplete();
+
+                await task;
+                await task2;
             }
 
-            Console.WriteLine("Processed {0} parsed {1}", counterProcessed, counterParsed);
 
-            queue.Writer.TryComplete();
-            exceptions.Writer.TryComplete();
-
-            task.Wait();
 
             //ClearDuplicates();
+        }
+
+        static Replay ParseSiglePbo(string pbo)
+        {
+            var replayName = Path.GetFileNameWithoutExtension(pbo);
+            using var file = File.OpenRead(pbo);
+            return ParseSingleReplay(replayName, file);
+        }
+        static Replay ParseSingleReplay(string replayName, Stream file)
+        {
+            var stream = PboFile.FromStream(file).OpenFile("log.txt");
+            if (stream == null) return null;
+            using var input = new StreamReader(stream);
+            var p = new ReplayProcessor(input);
+            var replay = p.ProcessReplay();
+            replay.Server = replayName.Substring(0, 2);
+            return replay;
+        }
+        static Replay ParseSingleArchive(string archive)
+        {
+            using var arch = SevenZipArchive.Open(archive);
+            foreach (var ent in arch.Entries)
+            {
+                if(Path.GetExtension(ent.Key) == ".pbo")
+                {
+                    var replayName = Path.GetFileNameWithoutExtension(ent.Key);
+                    using var file = ent.OpenEntryStream();
+                    return ParseSingleReplay(replayName, file);
+                }
+            }
+            throw new InvalidOperationException("Replay not found in archive");
         }
 
         static void ParsePbo(string pbo)
@@ -154,6 +196,8 @@ namespace Tushino
             }
             if (counterProcessed % 100 == 0) Console.WriteLine("Processed {0} parsed {1}", counterProcessed, counterParsed);
         }
+
+
 
         static void ParseReplayLog(string replayName, Stream file)
         {

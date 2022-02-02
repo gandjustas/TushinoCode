@@ -7,10 +7,14 @@ using System.Threading.Tasks;
 
 namespace Tushino
 {
-    public class Kill: ReplayEvent
+    public class EnterExit: ReplayEvent
     {
-        public int KillerId { get; set; }
-        public int TargetId { get; set; }
+        public int UnitId { get; set; }
+
+        public bool IsEnter { get; set; }
+
+        [MaxLength(50)]
+        public string User { get; set; }
 
     }
 }
