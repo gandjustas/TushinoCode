@@ -11,7 +11,7 @@ namespace Tushino
         public int Id { get; set; }
         public int ReplayId { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Name { get; set; }
 
         [MaxLength(50)]
@@ -21,10 +21,10 @@ namespace Tushino
         [MaxLength(50)]
         public string Icon { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Squad { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Title { get; set; }
 
         public double Damage { get; set; }

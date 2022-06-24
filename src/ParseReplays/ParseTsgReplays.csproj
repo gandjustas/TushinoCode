@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>ParseTsgReplays</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>ParseTsgReplays</PackageId>
@@ -9,7 +8,9 @@
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <StartupObject>Tushino.Program</StartupObject>
-    <AnalysisLevel>5.0</AnalysisLevel>
+    <AnalysisLevel>6.0</AnalysisLevel>
+    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks />
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,5 +57,7 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tushino;
@@ -11,9 +12,10 @@ using Tushino;
 namespace ParseTsgReplays.Migrations
 {
     [DbContext(typeof(ReplaysContext))]
-    partial class ReplaysContextModelSnapshot : ModelSnapshot
+    [Migration("20220401005034_Unit_String_Length")]
+    partial class Unit_String_Length
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

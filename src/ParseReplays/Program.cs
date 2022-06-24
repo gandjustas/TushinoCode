@@ -52,7 +52,8 @@ namespace Tushino
 
             if (Path.HasExtension(dir))
             {
-                var replay = Path.GetExtension(dir) switch {
+                var replay = Path.GetExtension(dir) switch
+                {
                     ".pbo" => ParseSiglePbo(dir),
                     ".7z" => ParseSingleArchive(dir),
                     _ => throw new InvalidOperationException("Unknown file extension")
@@ -65,7 +66,7 @@ namespace Tushino
                         var toRemove = await db.Replays.Where(r => r.Server == key.server && r.Timestamp == key.timestamp).ToListAsync();
                         db.Replays.RemoveRange(toRemove);
                     }
-                    else 
+                    else
                     {
                         throw new InvalidOperationException($"Replay from {key.server} {key.timestamp} already exists");
                     }
@@ -78,31 +79,26 @@ namespace Tushino
             {
                 var task = Task.Run(async () =>
                 {
-                    var set = new HashSet<ReplayKey>();
-
-                    var counter = 0;
-                    List<Replay> toAdd = new List<Replay>();
-                    await foreach (var r in queue.Reader.ReadAllAsync())
+                    var reader = queue.Reader;
+                    List<Replay> toAdd = new();
+                    while (await reader.WaitToReadAsync())
                     {
-                        if (ExistingRecords.Add(new(r.Server, r.Timestamp)))
+                        while (reader.TryRead(out Replay r))
                         {
-                            toAdd.Add(r);
-                            if (++counter % 1000 == 0)
+                            if (ExistingRecords.Add(new(r.Server, r.Timestamp)))
                             {
-                                using (var db = new ReplaysContext(contextOptions))
-                                {
-                                    db.Replays.AddRange(toAdd);
-                                    await db.SaveChangesAsync();
-                                    counter = 0;
-                                    toAdd.Clear();
-                                }
+                                toAdd.Add(r);
                             }
                         }
-                    }
-                    using (var db = new ReplaysContext(contextOptions))
-                    {
-                        db.Replays.AddRange(toAdd);
-                        await db.SaveChangesAsync();
+                        if (toAdd.Any())
+                        {
+                            using (var db = new ReplaysContext(contextOptions))
+                            {
+                                db.Replays.AddRange(toAdd);
+                                await db.SaveChangesAsync();
+                                toAdd.Clear();
+                            }
+                        }
                     }
                 });
 
@@ -116,9 +112,19 @@ namespace Tushino
                         Console.WriteLine();
                     }
                 });
+#if DEBUG
+                foreach (var f in Directory.EnumerateFiles(dir, "*.pbo", SearchOption.AllDirectories))
+                {
+                    ParsePbo(f);
+                };
+                foreach (var f in Directory.EnumerateFiles(dir, "*.7z", SearchOption.AllDirectories))
+                {
+                    ParseArchive(f);
+                };
+#else
                 Parallel.ForEach(Directory.EnumerateFiles(dir, "*.pbo", SearchOption.AllDirectories), ParsePbo);
                 Parallel.ForEach(Directory.EnumerateFiles(dir, "*.7z", SearchOption.AllDirectories), ParseArchive);
-
+#endif
                 Console.WriteLine("Processed {0} parsed {1}", counterProcessed, counterParsed);
 
                 queue.Writer.TryComplete();
@@ -154,7 +160,7 @@ namespace Tushino
             using var arch = SevenZipArchive.Open(archive);
             foreach (var ent in arch.Entries)
             {
-                if(Path.GetExtension(ent.Key) == ".pbo")
+                if (Path.GetExtension(ent.Key) == ".pbo")
                 {
                     var replayName = Path.GetFileNameWithoutExtension(ent.Key);
                     using var file = ent.OpenEntryStream();

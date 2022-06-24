@@ -2,7 +2,7 @@
   "profiles": {
     "ParseTsgReplays": {
       "commandName": "Project",
-      "commandLineArgs": "F:\\Downloads\\T2.2022-01-28-22-49-06.TSG@184_mik_Depo_S_v7.cartercity.pbo.7z"
+      "commandLineArgs": "F:\\TushinoReplays\\"
     }
   }
 }

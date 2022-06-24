@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tushino;
@@ -11,9 +12,10 @@ using Tushino;
 namespace ParseTsgReplays.Migrations
 {
     [DbContext(typeof(ReplaysContext))]
-    partial class ReplaysContextModelSnapshot : ModelSnapshot
+    [Migration("20220203222447_AddedUnitKey")]
+    partial class AddedUnitKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -279,15 +281,15 @@ namespace ParseTsgReplays.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("Side")
                         .HasColumnType("integer");
 
                     b.Property<string>("Squad")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("TimeInVehicle")
                         .HasColumnType("integer");
@@ -299,8 +301,8 @@ namespace ParseTsgReplays.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int?>("VehicleOrDriverId")
                         .HasColumnType("integer");

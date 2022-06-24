@@ -22,5 +22,10 @@ namespace Tushino
             //AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Unit>().HasKey(u => new { u.Id, u.ReplayId });
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

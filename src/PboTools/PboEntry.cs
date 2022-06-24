@@ -171,45 +171,42 @@ namespace PboTools
 
         private static byte[] Unpack(BinaryReader reader, uint originalSize)
         {
-            var fl = 0;
-            int i = 0;
+            var unpackedBytesCount = 0;
             var result = new byte[originalSize];
-            while (fl < originalSize)
+            while (unpackedBytesCount < originalSize)
             {
                 var b = reader.ReadByte();
-                for (int k = 0; k < 8 && fl < originalSize; k++)
+                for (int k = 0; k < 8 && unpackedBytesCount < originalSize; k++, b >>= 1)
                 {
                     var bit = b & 1;
-                    b >>= 1;
                     if (bit == 1)
                     {
-                        result[fl++] = reader.ReadByte();
+                        result[unpackedBytesCount++] = reader.ReadByte();
                     }
                     else
                     {
                         var pointer = reader.ReadUInt16();
-                        var rpos = fl - ((pointer & 0x00FF) + ((pointer & 0xF000) >> 4));
+                        var rpos = unpackedBytesCount - ((pointer & 0x00FF) + ((pointer & 0xF000) >> 4));
                         var rlen = ((pointer & 0x0F00) >> 8) + 3;
                         if (rpos < 0)
                         {
-                            for (int j = 0; j < rlen; j++)
+                            for (int i = 0; i < rlen; i++)
                             {
-                                result[fl++] = (byte)' ';
+                                result[unpackedBytesCount++] = (byte)' ';
                             }
                         }
-                        else if (rpos + rlen <= fl)
+                        else if (rpos + rlen <= unpackedBytesCount)
                         {
-                            Array.Copy(result, rpos, result, fl, rlen);
-                            fl += rlen;
+                            Array.Copy(result, rpos, result, unpackedBytesCount, rlen);
+                            unpackedBytesCount += rlen;
                         }
                         else
                         {
-                            for (int j = 0; j < rlen; j++)
+                            for (int i = 0; i < rlen; i++)
                             {
-                                result[fl++] = result[rpos + j];
+                                result[unpackedBytesCount++] = result[rpos + i];
                             }
                         }
-                        i += 2;
 
                     }
 
